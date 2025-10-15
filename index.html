@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>AVTHR BIO Automation - AI-Powered Bio Generator</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <link rel="stylesheet" href="styles.css"/>
+    
+    <style>
+        .select-wrapper {
+            position: relative;
+        }
+        .select-wrapper::after {
+            content: ' ';
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            width: 1.5rem;
+            height: 1.5rem;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%239CA3AF' class='w-6 h-6'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9' /%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+        }
+        .dark .select-wrapper::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='white' class='w-6 h-6'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9' /%3e%3c/svg%3e");
+        }
+
+        .auto-scroll {
+            animation: scroll 30s linear infinite;
+        }
+
+        .auto-scroll:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .template-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .template-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .bio-output {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .tag {
+            transition: all 0.2s ease;
+        }
+
+        .tag:hover {
+            transform: scale(1.05);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="p-4 flex justify-between items-center sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10">
+            <div class="flex items-center space-x-4">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">AVTHR <span class="text-primary">BIO</span></h2>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#" onclick="showPage('home')" class="nav-link text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Home</a>
+                <a href="#" onclick="showPage('generator')" class="nav-link text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Generator</a>
+                <a href="#" onclick="showPage('about')" class="nav-link text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">About</a>
+            </nav>
+            <div class="flex items-center space-x-2">
+                <button id="themeToggle" class="text-gray-600 dark:text-gray-300 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <span class="material-symbols-outlined">dark_mode</span>
+                </button>
+                <button id="helpButton" class="text-gray-600 dark:text-gray-300 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <span class="material-symbols-outlined">help_outline</span>
+                </button>
+                <button id="mobileMenuToggle" class="md:hidden text-gray-600 dark:text-gray-300 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Mobile Navigation -->
+        <nav id="mobileNav" class="hidden md:hidden bg-background-light dark:bg-background-dark border-t border-gray-200 dark:border-gray-800">
+            <div class="flex flex-col space-y-2 p-4">
+                <a href="#" onclick="showPage('home')" class="nav-link text-gray-600 dark:text-gray-300 hover:text-primary transition-colors py-2">Home</a>
+                <a href="#" onclick="showPage('generator')" class="nav-link text-gray-600 dark:text-gray-300 hover:text-primary transition-colors py-2">Generator</a>
+                <a href="#" onclick="showPage('about')" class="nav-link text-gray-600 dark:text-gray-300 hover:text-primary transition-colors py-2">About</a>
+            </div>
+        </nav>
+
+        <main class="flex-grow">
+            <!-- Home Page -->
+            <div id="homePage" class="page p-4">
+                <!-- Hero Section -->
+                <section class="text-center pt-8 pb-12">
+                    <h1 class="text-4xl font-black text-gray-900 dark:text-white leading-tight">
+                        Craft Your Perfect Social Media Bio
+                    </h1>
+                    <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                        Elevate your online presence with AI-powered bios that capture your essence.
+                    </p>
+                    <div class="mt-8 space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+                        <button onclick="showPage('generator')" class="px-8 py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all duration-200 transform hover:scale-105">
+                            Generate My Bio
+                        </button>
+                        <button onclick="showPage('about')" class="px-8 py-4 border-2 border-primary text-primary font-bold rounded-xl hover:bg-primary hover:text-white transition-all duration-200">
+                            Learn More
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Templates Section -->
+                <section class="py-8">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-6">Featured Templates</h2>
+                    <div class="overflow-hidden">
+                        <div id="templatesContainer" class="flex space-x-4 auto-scroll">
+                            <!-- Templates will be dynamically loaded here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Features Section -->
+                <section class="py-12">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-6">Why Choose AVTHR BIO?</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                        <div class="bg-gray-200/50 dark:bg-gray-800/50 p-6 rounded-xl flex flex-col items-center text-center template-card">
+                            <div class="p-4 bg-primary/20 rounded-full mb-4">
+                                <span class="material-symbols-outlined text-primary text-2xl">auto_awesome</span>
+                            </div>
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-2">AI-Powered</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Advanced AI creates unique bios tailored to your personality</p>
+                        </div>
+                        <div class="bg-gray-200/50 dark:bg-gray-800/50 p-6 rounded-xl flex flex-col items-center text-center template-card">
+                            <div class="p-4 bg-primary/20 rounded-full mb-4">
+                                <span class="material-symbols-outlined text-primary text-2xl">speed</span>
+                            </div>
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-2">Instant Results</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Get 3 unique bio options in seconds, no waiting required</p>
+                        </div>
+                        <div class="bg-gray-200/50 dark:bg-gray-800/50 p-6 rounded-xl flex flex-col items-center text-center template-card">
+                            <div class="p-4 bg-primary/20 rounded-full mb-4">
+                                <span class="material-symbols-outlined text-primary text-2xl">tune</span>
+                            </div>
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-2">Fully Customizable</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Choose platform, tone, emojis, hashtags, and creative levels</p>
+                        </div>
+                        <div class="bg-gray-200/50 dark:bg-gray-800/50 p-6 rounded-xl flex flex-col items-center text-center template-card">
+                            <div class="p-4 bg-primary/20 rounded-full mb-4">
+                                <span class="material-symbols-outlined text-primary text-2xl">security</span>
+                            </div>
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-2">100% Secure</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Your data is safe and never stored permanently</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Statistics Section -->
+                <section class="py-12 bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl mx-4">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-8">Trusted by Thousands</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto text-center">
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-2">50,000+</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Bios Generated</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-2">25+</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Languages Supported</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-2">99.9%</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Uptime</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-primary mb-2">4.9/5</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">User Rating</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Generator Page -->
+            <div id="generatorPage" class="page p-4 hidden">
+                <!-- Interactive Demo -->
+                <section id="bioForm" class="py-8">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white text-center mb-6">Create Your Perfect Bio</h1>
+                    <div class="space-y-4 max-w-md mx-auto">
+                        <input id="userName" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all" placeholder="Your Name" type="text"/>
+                        
+                        <input id="userProfession" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all" placeholder="Profession" type="text"/>
+                        
+                        <div class="select-wrapper">
+                            <select id="platform" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg appearance-none border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                                <option disabled selected>Platform</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="instagram">Instagram</option>
+                                <option value="linkedin">LinkedIn</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="facebook">Facebook</option>
+                            </select>
+                        </div>
+                        
+                        <div class="select-wrapper">
+                            <select id="tone" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg appearance-none border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                                <option disabled selected>Tone</option>
+                                <option value="professional">Professional</option>
+                                <option value="creative">Creative</option>
+                                <option value="witty">Witty</option>
+                                <option value="inspirational">Inspirational</option>
+                                <option value="casual">Casual</option>
+                            </select>
+                        </div>
+                        
+                        <input id="keywords" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all" placeholder="Keywords (e.g., Tech, Travel, Food)" type="text"/>
+                        
+                        <!-- Tags Display -->
+                        <div id="tagsContainer" class="flex flex-wrap gap-2">
+                            <!-- Tags will be dynamically added here -->
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="space-y-3">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Bio Length</h3>
+                            <div class="select-wrapper">
+                                <select id="bioLength" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg appearance-none border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                                    <option value="short">Short (10-15 words)</option>
+                                    <option value="medium" selected>Medium (20-25 words)</option>
+                                    <option value="long">Long (30-35 words)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Bio Style</h3>
+                            <div class="select-wrapper">
+                                <select id="bioStyle" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg appearance-none border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                                    <option value="standard">Standard</option>
+                                    <option value="storytelling">Storytelling</option>
+                                    <option value="achievements">Achievement-focused</option>
+                                    <option value="question">Question-based</option>
+                                    <option value="humorous">Humorous</option>
+                                    <option value="minimalist">Minimalist</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Target Audience</h3>
+                            <div class="select-wrapper">
+                                <select id="targetAudience" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg appearance-none border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                                    <option value="general">General Audience</option>
+                                    <option value="professional">Professionals</option>
+                                    <option value="clients">Potential Clients</option>
+                                    <option value="employers">Employers</option>
+                                    <option value="peers">Industry Peers</option>
+                                    <option value="followers">Social Followers</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Call-to-Action</h3>
+                            <div class="select-wrapper">
+                                <select id="callToAction" class="enhanced-input w-full p-4 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg appearance-none border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                                    <option value="none">No CTA</option>
+                                    <option value="contact">Contact Me</option>
+                                    <option value="follow">Follow for Updates</option>
+                                    <option value="connect">Let's Connect</option>
+                                    <option value="collaborate">Open to Collaboration</option>
+                                    <option value="hire">Available for Hire</option>
+                                    <option value="learn">Learn More</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Customization Options -->
+                        <div class="space-y-3">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Customization Options</h3>
+                            
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-gray-200/50 dark:bg-gray-800/50">
+                                <div>
+                                    <p class="font-medium text-gray-900 dark:text-white">Include Emojis</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Add relevant emojis</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input id="includeEmojis" class="sr-only peer" type="checkbox" checked/>
+                                    <div class="w-11 h-6 bg-gray-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-gray-200/50 dark:bg-gray-800/50">
+                                <div>
+                                    <p class="font-medium text-gray-900 dark:text-white">Include Hashtags</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Add relevant hashtags</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input id="includeHashtags" class="sr-only peer" type="checkbox"/>
+                                    <div class="w-11 h-6 bg-gray-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-gray-200/50 dark:bg-gray-800/50">
+                                <div>
+                                    <p class="font-medium text-gray-900 dark:text-white">Include Numbers/Stats</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Add achievements or statistics</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input id="includeStats" class="sr-only peer" type="checkbox"/>
+                                    <div class="w-11 h-6 bg-gray-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-gray-200/50 dark:bg-gray-800/50">
+                                <div>
+                                    <p class="font-medium text-gray-900 dark:text-white">Include Location</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Mention city or country</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input id="includeLocation" class="sr-only peer" type="checkbox"/>
+                                    <div class="w-11 h-6 bg-gray-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 rounded-lg bg-gray-200/50 dark:bg-gray-800/50">
+                                <div>
+                                    <p class="font-medium text-gray-900 dark:text-white">Creative Mode</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">More unique and creative bios</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input id="creativeMode" class="sr-only peer" type="checkbox"/>
+                                    <div class="w-11 h-6 bg-gray-300 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button id="generateBio" class="w-full py-3 font-bold text-white rounded-xl bg-primary hover:bg-primary/90 active:bg-primary/80 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="generateText">Generate Bio</span>
+                            <span id="loadingSpinner" class="loading-spinner material-symbols-outlined hidden">refresh</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Generated Bios Section -->
+                <section id="generatedBios" class="py-8 hidden">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-6">Your Generated Bios</h2>
+                    <div id="biosContainer" class="space-y-4 max-w-2xl mx-auto">
+                        <!-- Generated bios will appear here -->
+                    </div>
+                    <div class="text-center mt-6">
+                        <button id="generateMore" class="px-6 py-2 bg-primary/20 dark:bg-primary/30 text-primary font-semibold rounded-lg hover:bg-primary/30 dark:hover:bg-primary/40 transition-all duration-200">
+                            Generate More Options
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- About Page -->
+            <div id="aboutPage" class="page p-4 hidden">
+                <section class="py-8 max-w-4xl mx-auto">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white text-center mb-8">About AVTHR BIO Automation</h1>
+                    
+                    <div class="prose prose-lg dark:prose-invert mx-auto">
+                        <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-8 mb-8">
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Our Mission</h2>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                At AVTHR BIO Automation, we believe that everyone deserves a compelling social media presence. Our advanced AI platform helps you create the perfect bio that captures your unique personality and professional brand in just seconds.
+                            </p>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-8 mb-8">
+                            <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">What We Do</h3>
+                                <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                                    <li>• Generate unique, engaging social media bios</li>
+                                    <li>• Support multiple platforms (Twitter, Instagram, LinkedIn, etc.)</li>
+                                    <li>• Customize tone, style, and content</li>
+                                    <li>• Provide instant results with cutting-edge AI technology</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-6">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Why Choose Us</h3>
+                                <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                                    <li>• Advanced AI technology for smart bio generation</li>
+                                    <li>• Platform-specific optimization</li>
+                                    <li>• Multiple style and tone options</li>
+                                    <li>• Free to use with no hidden costs</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-xl p-8 mb-8">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Advanced Features</h3>
+                            <div class="grid md:grid-cols-3 gap-6">
+                                <div class="text-center">
+                                    <div class="p-3 bg-primary/20 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary">psychology</span>
+                                    </div>
+                                    <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Smart AI Analysis</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Advanced AI understands context and creates personalized content</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="p-3 bg-primary/20 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary">language</span>
+                                    </div>
+                                    <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Multi-Platform Support</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Optimized for all major social media platforms</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="p-3 bg-primary/20 rounded-full w-16 h-16 mx-auto mb-3 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary">edit</span>
+                                    </div>
+                                    <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Easy Customization</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Edit, regenerate, and perfect your bio effortlessly</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center bg-gray-100 dark:bg-gray-800 rounded-xl p-8">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Ready to Get Started?</h3>
+                            <p class="text-gray-700 dark:text-gray-300 mb-6">
+                                Join thousands of users who have already created their perfect social media bio with AVTHR BIO Automation.
+                            </p>
+                            <button onclick="showPage('generator')" class="px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all duration-200 transform hover:scale-105">
+                                Create Your Bio Now
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Contact Page -->
+            <div id="contactPage" class="page p-4 hidden">
+                <section class="py-8 max-w-2xl mx-auto">
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white text-center mb-8">Contact Us</h1>
+                    
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-8 text-center">
+                        <div class="p-4 bg-primary/20 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-3xl">mail</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Get in Touch</h2>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6">
+                            We'd love to hear from you! For any questions, suggestions, or feedback about AVTHR BIO Automation, please reach out to us.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-center">
+                                <span class="material-symbols-outlined mr-3 text-primary">email</span>
+                                <span class="text-lg font-medium text-gray-900 dark:text-white">support@avthr.com</span>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <span class="material-symbols-outlined mr-3 text-primary">schedule</span>
+                                <span class="text-gray-600 dark:text-gray-300">Response time: Usually within 24 hours</span>
+                            </div>
+                        </div>
+                        <div class="mt-8 p-4 bg-primary/10 dark:bg-primary/20 rounded-lg">
+                            <p class="text-primary font-medium">💡 Pro Tip: Include details about your use case for faster support!</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center py-8 px-4 border-t border-gray-200 dark:border-gray-800 mt-auto">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                <a class="hover:text-primary transition-colors" href="#" onclick="showPage('about')">About</a> | 
+                <a class="hover:text-primary transition-colors" href="#" onclick="showPrivacyPolicy()">Privacy Policy</a>
+            </p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">
+                © 2025 AVTHR BIO Automation. All rights reserved.
+            </p>
+        </footer>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Toast messages will appear here -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
