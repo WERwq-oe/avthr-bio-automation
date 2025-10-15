@@ -1,0 +1,32 @@
+🚀 QUICK GITHUB DEPLOYMENT COMMANDS
+
+📁 LOCATION: C:\Users\om\avthr-github-deploy
+📊 SIZE: 0.10 MB (Well under 100MB limit!)
+✅ FILES: 10 essential files only
+
+STEP 1: Create GitHub Repository
+1. Go to https://github.com
+2. New Repository → Name: avthr-bio-automation
+3. Public, No README, No .gitignore, No license
+4. Create repository
+
+STEP 2: Upload to GitHub
+Copy your GitHub repository URL, then run these commands:
+
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/avthr-bio-automation.git
+git push -u origin main
+
+STEP 3: Deploy to Vercel
+1. Go to https://vercel.com
+2. Sign up with GitHub
+3. Import avthr-bio-automation repository
+4. Add Environment Variable:
+   - GEMINI_API_KEY = AIzaSyAOCRjlOumCIXF_0idUzvYCZp4-80Y_GOw
+5. Deploy!
+
+✅ SIZE GUARANTEED: Under 1MB total (GitHub allows 100MB)
+✅ NO LARGE FILES: Strict .gitignore prevents issues
+✅ READY FOR VERCEL: All config files included
+
+Your website will be live at: https://avthr-bio-automation-xyz.vercel.app
